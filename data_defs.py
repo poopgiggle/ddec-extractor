@@ -12,9 +12,12 @@ def parse_message(message):
         bitmask_len = ord(message[index+4])
         bitmask_bytes = message[index+5:index+5+bitmask_len]
         this_page = request_codes[page_type](bitmask_bytes)
-        print(repr(page_size_plus_bitmask))
         page_size = page_size_plus_bitmask - bitmask_len - 1
-
+        try:
+            assert(page_size % len(this_page) == 0)
+        except:
+            print("Expected some multiple of %d, got %d" % (page_size,len(this_page)))
+            sys.exit()
         page_index = 0
         for i in range(page_size / len(this_page)):
             base_index = index+5+bitmask_len+page_index
@@ -977,7 +980,7 @@ class OverRevEnable(Parameter):#enum
 
 class CPCSoftwareVersionID(StringParameter):
     name = "CPC Software Version ID"
-    size = 70
+    length = 70
 
 class PTOIdleRPMThreshold(ShortParameter):
     name = "PTO Idle RPM Threshold"
@@ -1231,7 +1234,7 @@ class PermanentParkedDPFFuelVolume(LongParameter):
     units = "Gallons"
 
 class PermanentDrivingDPFFuelVolume(LongParameter):
-    name = "Driving PDF Fuel Volume"
+    name = "Driving DPF Fuel Volume"
     scale = 0.00048828125
     units = "Gallons"
 
@@ -1799,7 +1802,7 @@ class PermanentPeakSubPage(SubPage):
                   PermanentPeakRoadSpeedTimeStamp(),
                   PermanentPeakEngineRPMTimeStamp()]
 
-class PermanentOptimizedIdleSubPage(SubPage):
+class PermanentOptimizedIdleCountsSubPage(SubPage):
     param_list = [PermanentTotalBatteryStartsNormal(),
                   PermanentTotalBatteryStartsAlternative(),
                   PermanentTotalBatteryStartsContinuous()]
@@ -2000,7 +2003,7 @@ class Permanent(DataPage):
                 PermanentEngineRevolutionsSubPage(),
                 PermanentFanTimeSubPage(),
                 PermanentPeakSubPage(),
-                PermanentOptimizedIdleSubPage(),
+                PermanentOptimizedIdleCountsSubPage(),
                 PermanentDPFRegenStatisticsSubPage(),
                 PermanentTotalPredictiveCruiseTimeSubPage()]
 
@@ -2022,4 +2025,6 @@ request_codes = {1:Trip,#done
                  23:Trip,#done
                  24:TripTable,#done
                  25:TripTable}#done
+
+
 
