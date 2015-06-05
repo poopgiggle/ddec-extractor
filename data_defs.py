@@ -14,7 +14,7 @@ def parse_message(message):
         this_page = request_codes[page_type](bitmask_bytes)
         print(repr(page_size_plus_bitmask))
         page_size = page_size_plus_bitmask - bitmask_len - 1
-        assert(page_size % len(this_page) == 0)
+
         page_index = 0
         for i in range(page_size / len(this_page)):
             base_index = index+5+bitmask_len+page_index
@@ -43,11 +43,17 @@ class Parameter():
             setattr(self,k,v)
 
     def __len__(self):
-        return struct.calcsize(self.format)*self.repeat
-
+        try:
+            return struct.calcsize(self.format)*self.repeat
+        except:
+            print("format error in class %s. format is: %s" % (self.__class__.__name__,self.format))
+            sys.exit()
     def get_data(self,byte_list):
         assert(len(byte_list) == len(self))
-        this_data = map(lambda x: x*self.scale,struct.unpack(self.format*self.repeat,byte_list))
+        try:
+            this_data = map(lambda x: x*self.scale,struct.unpack(self.format*self.repeat,byte_list))
+        except:
+            print("Format: %s, Byte_list: %s, Class: %s" % (self.format*self.repeat,repr(byte_list),self.__class__.__name__))
         if len(this_data) == 1:
             this_data = this_data[0]
         return this_data
@@ -110,10 +116,10 @@ class DataPage(object):
 
 
 class LongParameter(Parameter):
-    format = "<L"
+    format = "I"
 
 class ShortParameter(Parameter):
-    format = "<H"
+    format = "H"
 
 class StringParameter():
     length = 10
@@ -1081,11 +1087,11 @@ class StartDayOdometer(LongParameter):
     units = "Miles"
 
 class IdleTimeBreakdown(Parameter):#ALERT
-    format = "<L"*3
+    format = "<LLL"
     name = "Idle Time Breakdown"
     
 class DriveTimeBreakdown(Parameter):#ALERT
-    format = "<L"*3
+    format = "<LLL"
     name = "Drive Time Breakdown"
 
 
