@@ -1,6 +1,7 @@
 import struct
 from utils import bit_at_index
 import sys
+import string
 
 def parse_message(message):
     num_pages = ord(message[2])
@@ -24,7 +25,7 @@ def parse_message(message):
             pages.append(this_page.get_data(message[base_index:base_index+len(this_page)]))
             page_index += len(this_page)
 
-        index += 5+bitmask_len+len(this_page)
+        index += 4+page_size_plus_bitmask
 
     return pages
         
@@ -134,8 +135,7 @@ class StringParameter():
             assert(len(byte_list) == len(self))
         except AssertionError:
             print("StringParameter needed byte string of length %d, got length %d" % (len(self),len(byte_list)))
-            sys.exit()
-        return byte_list
+        return ''.join(x for x in byte_list if x in string.printable)
 
 ##############################
 # Incident data parameters   #
