@@ -3,6 +3,16 @@ from utils import bit_at_index
 import sys
 import string
 
+try:
+    # Try from django's slugify first
+    from django.utils.text import slugify as django_slugify
+    slugify = lambda slug: re.sub('[-]', '_', django_slugify(slug))
+except ImportError:
+    # Then use awesome-slugify
+    from slugify import Slugify
+    slugify = Slugify(to_lower=True, separator='_')
+
+
 def parse_message(message):
     num_pages = ord(message[2])
     index = 4
@@ -36,10 +46,12 @@ class Parameter():
     __allowed = ('format','name','scale','units','repeat')
 
     format = 'B'
-    name = None
+    name = 'Default Name'
     scale = 1
-    units = None
+    units = 'Units'
     repeat = 1
+    _data = None
+    _bytes = None
 
     def __init__(self,*args,**kwargs):
         for k,v in kwargs.iteritems():
@@ -52,6 +64,7 @@ class Parameter():
         except:
             print("format error in class %s. format is: %s" % (self.__class__.__name__,self.format))
             sys.exit()
+
     def get_data(self,byte_list):
         assert(len(byte_list) == len(self))
         try:
@@ -60,7 +73,34 @@ class Parameter():
             print("Format: %s, Byte_list: %s, Class: %s" % (self.format*self.repeat,repr(byte_list),self.__class__.__name__))
         if len(this_data) == 1:
             this_data = this_data[0]
+        self._data = this_data
+        self._bytes = byte_list
         return this_data
+
+    @property
+    def data(self):
+        if not self._data or not self._bytes:
+            return None
+        value_data = {
+            'name':self.name
+            'units':self.units
+            'bytes':self._bytes
+            }
+        if len(self._data) == 1:
+            value_data.update({'value':repr(self._data)})
+        else:
+            value_data.update({'values':map(repr,self._data)})
+
+        return self.slug_name : value_data
+            
+
+    @property
+    def slug_name(self):
+        if self._slug_name:
+            return self._slug_name
+        else:
+            self._slug_name = slugify(unicode(self.name))
+            return self._slug_name
 
 class SubPage():
    __allowed = ('param_list','repeat')
@@ -147,7 +187,7 @@ class EngineHours(LongParameter):
     units = "Hours"
 
 class Odometer(LongParameter):
-    name = "Odometer"
+    name = "Incident Odometer"
     scale = 0.1
     units = "Miles"
 
@@ -162,12 +202,12 @@ class EngineSpeed(ShortParameter):
     units = "RPM"
 
 class PercentLoad(Parameter):
-    name = "Percent Engine Load"
+    name = "Engine Load"
     scale = 0.5
     units = "% load"
 
 class PercentThrottle(Parameter):
-    name = "Percent Throttle"
+    name = "Throttle"
     scale = 0.4
     units = "% throttle"
 
