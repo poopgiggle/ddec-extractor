@@ -3,6 +3,16 @@ from utils import bit_at_index
 import sys
 import string
 
+try:
+    # Try from django's slugify first
+    from django.utils.text import slugify as django_slugify
+    slugify = lambda slug: re.sub('[-]', '_', django_slugify(slug))
+except ImportError:
+    # Then use awesome-slugify
+    from slugify import Slugify
+    slugify = Slugify(to_lower=True, separator='_')
+
+
 def parse_message(message):
     num_pages = ord(message[2])
     index = 4
@@ -32,14 +42,16 @@ def parse_message(message):
 
 
 
-class Parameter():
+class Parameter(object):
     __allowed = ('format','name','scale','units','repeat')
 
     format = 'B'
-    name = None
+    name = 'Default Name'
     scale = 1
-    units = None
+    units = 'Units'
     repeat = 1
+    _data = None
+    _bytes = None
 
     def __init__(self,*args,**kwargs):
         for k,v in kwargs.iteritems():
@@ -52,6 +64,7 @@ class Parameter():
         except:
             print("format error in class %s. format is: %s" % (self.__class__.__name__,self.format))
             sys.exit()
+
     def get_data(self,byte_list):
         assert(len(byte_list) == len(self))
         try:
@@ -60,7 +73,35 @@ class Parameter():
             print("Format: %s, Byte_list: %s, Class: %s" % (self.format*self.repeat,repr(byte_list),self.__class__.__name__))
         if len(this_data) == 1:
             this_data = this_data[0]
+        self._data = this_data
+        self._bytes = byte_list
         return this_data
+
+    @property
+    def data(self):
+        print("Calling the data property!!!!!!")
+        if not self._data or not self._bytes:
+            return None
+        value_data = {
+            'name':self.name,
+            'units':self.units,
+            'bytes':self._bytes,
+            }
+        if not type(self._data) == list:
+            value_data.update({'value':repr(self._data)})
+        else:
+            value_data.update({'values':map(repr,self._data)})
+        print({self.slug_name : value_data})
+        return {self.slug_name : value_data}
+            
+
+    @property
+    def slug_name(self):
+        if hasattr(self,"_slug_name"):
+            return self._slug_name
+        else:
+            self._slug_name = slugify(unicode(self.name))
+            return self._slug_name
 
 class SubPage():
    __allowed = ('param_list','repeat')
@@ -79,8 +120,9 @@ class SubPage():
        for i in range(self.repeat):
            params = []
            for param in self.param_list:
-               param_data = param.get_data(byte_list[index:index+len(param)])
-               params.append(param_data)
+               param.get_data(byte_list[index:index+len(param)])
+               params.append(param.data)
+               print("successfully appended a pram.data")
                index += len(param)
            if len(params) == 1:
                data_elts.append(params[0])
@@ -127,6 +169,8 @@ class ShortParameter(Parameter):
 
 class StringParameter():
     length = 10
+    units = "string"
+    
     def __len__(self):
         return self.length
 
@@ -135,7 +179,35 @@ class StringParameter():
             assert(len(byte_list) == len(self))
         except AssertionError:
             print("StringParameter needed byte string of length %d, got length %d" % (len(self),len(byte_list)))
+        self._data = ''.join(x for x in byte_list if x in string.printable)
+        self._bytes = byte_list
         return ''.join(x for x in byte_list if x in string.printable)
+
+    @property
+    def data(self):
+        if not self._data or not self._bytes:
+            return None
+        value_data = {
+            'name':self.name,
+            'units':self.units,
+            'bytes':self._bytes,
+            }
+        if not type(self._data) == list:
+            value_data.update({'value':repr(self._data)})
+        else:
+            value_data.update({'values':map(repr,self._data)})
+        print({self.slug_name : value_data})
+        return {self.slug_name : value_data}
+            
+
+    @property
+    def slug_name(self):
+        if hasattr(self,"_slug_name"):
+            return self._slug_name
+        else:
+            self._slug_name = slugify(unicode(self.name))
+            return self._slug_name
+
 
 ##############################
 # Incident data parameters   #
@@ -147,7 +219,7 @@ class EngineHours(LongParameter):
     units = "Hours"
 
 class Odometer(LongParameter):
-    name = "Odometer"
+    name = "Incident Odometer"
     scale = 0.1
     units = "Miles"
 
@@ -162,12 +234,12 @@ class EngineSpeed(ShortParameter):
     units = "RPM"
 
 class PercentLoad(Parameter):
-    name = "Percent Engine Load"
+    name = "Engine Load"
     scale = 0.5
     units = "% load"
 
 class PercentThrottle(Parameter):
-    name = "Percent Throttle"
+    name = "Throttle"
     scale = 0.4
     units = "% throttle"
 
