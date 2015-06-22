@@ -79,8 +79,7 @@ class Parameter(object):
 
     @property
     def data(self):
-        print("Calling the data property!!!!!!")
-        if not self._data or not self._bytes:
+        if self._data is None or self._bytes is None:
             return None
         value_data = {
             'name':self.name,
@@ -91,7 +90,6 @@ class Parameter(object):
             value_data.update({'value':repr(self._data)})
         else:
             value_data.update({'values':map(repr,self._data)})
-        print({self.slug_name : value_data})
         return {self.slug_name : value_data}
             
 
@@ -122,7 +120,6 @@ class SubPage():
            for param in self.param_list:
                param.get_data(byte_list[index:index+len(param)])
                params.append(param.data)
-               print("successfully appended a pram.data")
                index += len(param)
            if len(params) == 1:
                data_elts.append(params[0])
