@@ -102,15 +102,26 @@ class Parameter(object):
             return self._slug_name
 
 class SubPage():
+   name = "foodongs"
    __allowed = ('param_list','repeat')
    repeat = 1
    def __init__(self,*args,**kwargs):
+       self.name = self.__class__.__name__
        for k,v in kwargs.iteritems():
            assert(k in self.__class__.__allowed)
            setattr(self,k,v)
            
    def __len__(self):
        return sum(map(len,self.param_list)) * self.repeat
+
+   @property
+   def slug_name(self):
+       if hasattr(self,"_slug_name"):
+           return self._slug_name
+       else:
+           self._slug_name = slugify(unicode(self.name))
+           return self._slug_name
+
 
    def get_data(self,byte_list):
        index = 0
@@ -126,7 +137,10 @@ class SubPage():
            else:
                data_elts.append(params)
 
-       return data_elts
+           if type(data_elts) == list and len(data_elts) == 1:
+               data_elts = data_elts[0]
+
+       return {self.slug_name:data_elts}
 
 
 class DataPage(object):
@@ -147,7 +161,7 @@ class DataPage(object):
         data_elts = []
         for subpage in self.pages_to_render:
             page_data = subpage.get_data(byte_list[index:index+len(subpage)])
-            if len(page_data) == 1:
+            if type(page_data) == list and len(page_data) == 1:
                 data_elts.append(page_data[0])
             else:
                 data_elts.append(page_data)
@@ -193,7 +207,6 @@ class StringParameter():
             value_data.update({'value':repr(self._data)})
         else:
             value_data.update({'values':map(repr,self._data)})
-        print({self.slug_name : value_data})
         return {self.slug_name : value_data}
             
 
@@ -1369,6 +1382,7 @@ class HeaderSoftwareMinorVersion(ShortParameter):
 ###########################
 
 class IncidentSubPage(SubPage):
+    name = "Incident Subpage"
     param_list = [RoadSpeed(),
                   EngineSpeed(),
                   PercentLoad(),
@@ -1376,9 +1390,11 @@ class IncidentSubPage(SubPage):
                   CruiseMode()]
 
 class LastStopPage(IncidentSubPage):
+    name = "Last Stop"
     repeat = 120
 
 class HardBrakePage(IncidentSubPage):
+    name = "Hard Brake"
     repeat = 75
 
 
@@ -1387,71 +1403,87 @@ class HardBrakePage(IncidentSubPage):
 ############################
 
 class TripSubPage(SubPage):
+    name = "Trip Data"
     param_list = [TripDistance(),
                   TripFuel(),
                   TripTime()]
 
 class DriveSubPage(SubPage):
+    name = "Drive Sub Page"
     param_list = [DriveDistance(),
                   DriveFuel(),
                   DriveTime()]
 
 class CruiseSubPage(SubPage):
+    name = "Cruise Sub Page"
     param_list = [CruiseDistance(),
                   CruiseFuel(),
                   CruiseTime()]
 
 class TopGearSubPage(SubPage):
+    name = "Top Gear Sub Page"
     param_list = [TopGearDistance(),
                   TopGearFuel(),
                   TopGearTime()]
 
 class IdleSubPage(SubPage):
+    name = "Idle Sub Page"
     param_list = [IdleFuel(),
                   IdleTime()]
 
 class VSGPTOSubPage(SubPage):
+    name = "VSGPTO Sub Page"
     param_list = [VSGPTOFuel(),
                   VSGPTOTime(),
                   VSGPTOIdleFuel(),
                   VSGPTOIdleTime()]
 
 class OverSpeedATimeSubPage(SubPage):
+    name = "Overspeed A Time Sub Page"
     param_list = [OverSpeedATime()]
 
 class OverSpeedBTimeSubPage(SubPage):
+    name = "Overspeed B Time Sub Page"
     param_list = [OverSpeedBTime()]
 
 class OverRevTimeSubPage(SubPage):
+    name = "Overrev Time Sub Page"
     param_list = [OverRevTime()]
 
 class CoastTimeSubPage(SubPage):
+    name = "Coast Time Sub Page"
     param_list = [CoastTime()]
 
 class PeakSubPage(SubPage):
+    name = "Peak Sub Page"
     param_list = [PeakRoadSpeed(),
                   PeakEngineSpeed()]
 
 class InterruptSubPage(SubPage):
+    name = "Interrupt Sub Page"
     param_list = [InterruptNumber(),
                   InterruptHours(),
                   InterruptDuration()]
 
 class TimeoutSubPage(SubPage):
+    name = "Timeout Sub Page"
     param_list = [TimeoutCount(),
                   TimeoutHours(),
                   TimeoutDuration()]
 
 class DriveLoadAccumulationSubPage(SubPage):
+    name = "Drive Load Accumulation Sub Page"
     param_list = [DriveLoadAccumulation()]
 
 class HardBrakeCountSubPage(SubPage):
+    name = "Hard Brake Count Sub Page"
     param_list = [HardBrakeCount(),
                   DriverIncidentCount(),
                   FutureHardBrakeIndex(),
                   FutureDriverIncidentIndex()]
 
 class OptimisedIdleData1SubPage(SubPage):
+    name = "Optimised Idle Data 1 Sub Page"
     param_list = [TripArmedTime(),
                   TripRunTime(),
                   StartOptimisedIdleFuelValue(),
@@ -1463,49 +1495,60 @@ class OptimisedIdleData1SubPage(SubPage):
                   BatteryTime()]
 
 class TopGearRatioSubPage(SubPage):
+    name = "Top Gear Ratio Sub Page"
     param_list = [TopGearRatio()]
 
 class TopGearTimeStampSubPage(SubPage):
+    name = "Top Gear Timestamp Sub Page"
     param_list = [TopGearTimeStamp()]
 
 class TopGear1DistanceSubPage(SubPage):
+    name = "Top Gear 1 Distance Sub Page"
     param_list = [TopGear1Distance(),
                   TopGear1Fuel(),
                   TopGear1Time()]
 
 class TopGear1RatioSubPage(SubPage):
+    name = "Top Gear 1 Ratio Sub Page"
     param_list = [TopGear1Ratio(),
                   TopGear1TimeStamp()]
 
 class TopGearCruiseSubPage(SubPage):
+    name = "Top Gear Cruise Sub Page"
     param_list = [TopGearCruiseDistance(),
                   TopGearCruiseFuel(),
                   TopGearCruiseTime()]
 
 class RSGSubPage(SubPage):
+    name = "RSG Sub Page"
     param_list = [RSGDistance(),
                   RSGFuel(),
                   RSGTime()]
 
 class StopIdleSubPage(SubPage):
+    name = "Stop Idle Sub Page"
     param_list = [StopIdleFuel(),
                   StopIdleTime()]
 
 class PumpSubPage(SubPage):
+    name = "Pump Sub Page"
     param_list = [PumpDistance(),
                   PumpFuel(),
                   PumpTime()]
 
 class JakeBrakeTimeSubPage(SubPage):
+    name = "Jake Brake TIme Sub Page"
     param_list = [JakeBrakeTime()]
 
 class FanTimeSubPage(SubPage):
+    name = "Fan Time Sub Page"
     param_list = [FanTimeEngine(),
                   FanTimeManual(),
                   FanTimeAirConditioning(),
                   FanTimeDPF()]
 
 class OptimisedIdleData2SubPage(SubPage):
+    name = "Optimised Idle Data 2 Sub Page"
     param_list = [OptimisedIdleArmedTime(),
                   OptimisedIdleRunTime(),
                   OptimisedIdleBatteryTime2(),
@@ -1515,15 +1558,18 @@ class OptimisedIdleData2SubPage(SubPage):
                   OptimisedIdleContinuousTime()]
 
 class PeakTimeStampSubPage(SubPage):
+    name = "Peak Time Stamp Sub Page"
     param_list = [PeakRoadSpeedTimeStamp(),
                   PeakEngineRPMTimeStamp()]
 
 class TripStartSubPage(SubPage):
+    name = "Trip Start Sub Page"
     param_list = [TripStartTimeStamp(),
                   TripStartOdometer()]
 
 
 class CountsSubPage(SubPage):
+    name = "Counts Sub Page"
     param_list = [CountOverSpeedACount(),
                   CountOverSpeedBCount(),
                   CountOverRevCount(),
@@ -1532,21 +1578,26 @@ class CountsSubPage(SubPage):
                   CountFirmBrakeCount()]
 
 class BVESubPage(SubPage):
+    name = "BVE Sub Page"
     param_list = [BVEBrakingVelocityEnergy(),
                   BVECrankshaftRevolutions()]
 
 class AlertCountSubPage(SubPage):
+    name = "Alert Counts Sub Page"
     param_list = [AlertCount()]
 
 class DriveAverageLoadFactorSubPage(SubPage):
+    name = "Drive Average Load Factor Sub Page"
     param_list = [DriveAverageLoadFactor()]
 
 class OptimizedIdleCountsSubPage(SubPage):
+    name = "Optimized Idle Counts Sub Page"
     param_list = [OICBatteryStartsNormal(),
                   OICBatteryStartsAlternative(),
                   OICBatteryStartsContinuousRun()]
 
 class DPFRegenerationStatisticsSubPage(SubPage):
+    name = "DPF Regeneration Statistics Sub Page"
     param_list = [DPFRSParkedRegenAttempts(),
                   DPFRSDrivingRegenAttempts(),
                   DPFRSParkedRegenCompletions(),
@@ -1556,6 +1607,7 @@ class DPFRegenerationStatisticsSubPage(SubPage):
                   DPFRSRegenerationTime()]
 
 class PredictiveCruiseSubPage(SubPage):
+    name = "Predictive Cruise Sub Page"
     param_list = [PCCDistance(),
                   PCCFuel(),
                   PCCTime()]
@@ -1566,13 +1618,16 @@ class PredictiveCruiseSubPage(SubPage):
 ######################
 
 class BrakeCountsSubPage(SubPage):
+    name = "Brake Counts Sub Page"
     param_list = [BrakeCounts()]
 
 class HardBrakeCountsSubPage(SubPage):
+    name = "Hard Brake Counts Sub Page"
     param_list = [HBCHardBrakeCounts(),
                   HBCFirmBrakeCounts()]
 
 class TimeInRoadSpeedEngineRPMBandsSubPage(SubPage):
+    name = "Time In Road Speed Engine RPM Bands Sub Page"
     param_list = [TIRSERBTimeInSpeedBandsRPMBand1(),
                   TIRSERBTimeInSpeedBandsRPMBand2(),
                   TIRSERBTimeInSpeedBandsRPMBand3(),
@@ -1585,6 +1640,7 @@ class TimeInRoadSpeedEngineRPMBandsSubPage(SubPage):
                   TIRSERBTimeInSpeedBandsOverRev()]
 
 class TimeInEngineLoadEngineRPMBandsSubPage(SubPage):
+    name = "Time In Engine Load Engine RPM Bands Sub Page"
     param_list = [TIELRBRPMBand1(),
                   TIELRBRPMBand2(),
                   TIELRBRPMBand3(),
@@ -1597,9 +1653,11 @@ class TimeInEngineLoadEngineRPMBandsSubPage(SubPage):
                   TIELRBOverRev()]
 
 class TimeInAutomaticOverSpeedBandsSubPage(SubPage):
+    name = "Time In Automatic Over Speed Bands Sub Page"
     param_list = [TimeInAutomaticOverSpeedBands()]
 
 class TimeInAutomaticEngineOverRevBandsSubPage(SubPage):
+    name = "Time In Automatic Engine Over Rev Bands Sub Page"
     param_list = [TimeInAutomaticEngineOverRevBands()]
 
 #################################
@@ -1607,73 +1665,95 @@ class TimeInAutomaticEngineOverRevBandsSubPage(SubPage):
 #################################
 
 class FleetIdleGoalPercentageSubPage(SubPage):
+    name = "Fleet Idle Goal Percentage Sub Page"
     param_list = [FleetIdleGoalPercentage()]
 
 class FuelEconomyGoalSubPage(SubPage):
+    name = "Fuel Economy Goal Sub Page"
     param_list = [FuelEconomyGoal()]
 
 class OverRevLimitASubPage(SubPage):
+    name = "Over Rev Limit A Sub Page"
     param_list = [OverRevLimitA()]
 
 class OverSpeedLimitSubPage(SubPage):
+    name = "Over Speed Limit Sub Page"
     param_list = [OverSpeedALimit(),
                   OverSpeedBLimit()]
 
 class PasswordSubPage(SubPage):
+    name = "Password Sub Page"
     param_list = [Password()]
 
 class DriverIDSubPage(SubPage):
+    name = "Driver ID Sub Page"
     param_list = [DriverIdentifier()]
 
 class VehicleIDSubPage(SubPage):
+    name = "Vehicle ID Sub Page"
     param_list = [VehicleIdentifier()]
 
 class CurrentOdometerSubPage(SubPage):
+    name = "Current Odometer Sub Page"
     param_list = [CurrentOdometer()]
 
 class HardBrakeDecelLimitSubPage(SubPage):
+    name = "Hard Brake Decel Limit Sub Page"
     param_list = [HardBrakeDecelLimit()]
 
 class IdleTimeLimitStopSubPage(SubPage):
+    name = "Idle Time Limit Stop Sub Page"
     param_list = [IdleTimeLimitStop()]
 
 class AlarmStateSubPage(SubPage):
+    name = "Alarm State Sub Page"
     param_list = [AlarmState()]
 
 class IntensitySubPage(SubPage):
+    name = "Intensity Sub Page"
     param_list = [DayIntensity(),
                   NightIntensity()]
 
 class UnitsSubPage(SubPage):
+    name = "Units Sub Page"
     param_list = [Units()]
 
 class LanguageSubPage(SubPage):
+    name = "Language Sub Page"
     param_list = [Language()]
 
 #reuse TopGearRatioSubPage
 
 class DataHubDeviceMIDSubPage(SubPage):
+    name = "Data Hub Device MID Sub Page"
     param_list = [DataHubDeviceMID()]
 
 class DataEntryRangeTypeSubPage(SubPage):
+    name = "Data Entry Range Type Sub Page"
     param_list = [DataEntryRangeType()]
 
 class AccessTypeSubPage(SubPage):
+    name = "Access Type Sub Page"
     param_list = [AccessType()]
 
 class PromptedDriverIDSubPage(SubPage):
+    naem = "Prompted Driver ID Sub Page"
     param_list = [PromptedDriverID()]
 
 class MPGAdjustmentSubPage(SubPage):
+    name = "MPG Adjustment Sub Page"
     param_list = [MPGAdjustment()]
 
 class SoftwareVersionSubPage(SubPage):
+    name = "Software Version Sub Page"
     param_list = [SoftwareVersion()]
 
 class ECMTypeSubPage(SubPage):
+    name = "ECM Type Sub Page"
     param_list = [ECMType()]
 
 class SpeedBandLimitsSubPage(SubPage):
+    name = "Speed Band Limit Sub Page"
     param_list = [SpeedBandLimit1(),
                   SpeedBandLimit2(),
                   SpeedBandLimit3(),
@@ -1685,6 +1765,7 @@ class SpeedBandLimitsSubPage(SubPage):
                   SpeedBandLimitB()]
 
 class RPMBandLimitsSubPage(SubPage):
+    name = "RPM Band Limits Sub Page"
     param_list = [RPMBandLimit1(),
                   RPMBandLimit2(),
                   RPMBandLimit3(),
@@ -1697,6 +1778,7 @@ class RPMBandLimitsSubPage(SubPage):
 
 
 class LoadBandLimitsSubPage(SubPage):
+    name = "Load Band Limit Sub Page"
     param_list = [LoadBandLimit1(),
                   LoadBandLimit2(),
                   LoadBandLimit3(),
@@ -1708,36 +1790,47 @@ class LoadBandLimitsSubPage(SubPage):
                   LoadBandLimit9()]
 
 class TrendSampleIntervalSubPage(SubPage):
+    name = "Trend Sample Intervale Sub Page"
     param_list = [TrendSampleInterval()]
 
 class RPMIdleThresholdSubPage(SubPage):
+    name = "RPM Idle Threshold Sub Page"
     param_list = [RPMIdleThreshold()]
 
 class LoadIdleThresholdSubPage(SubPage):
+    name = "Load Idle Threshold Sub Page"
     param_list = [LoadIdleThreshold()]
 
 class TopGear1RatioSubPage2(SubPage):
+    name = "Top Gear 1 Ratio Sub Page 2"
     param_list = [TopGear1Ratio()]
 
 class ServiceDueFlagSubPage(SubPage):
+    name = "Service Due Flag Sub Page"
     param_list = [ServiceDueFlag()]
 
 class ConfigurationPageChangeTimestampDataPage(SubPage):
+    name = "Configuration Page Change Timestamp Data Page"
     param_list = [ConfigurationPageChangeTimestamp()]
 
 class ConfigurationPageChecksumSubPage(SubPage):
+    name = "Configuration Page Checksum Sub Page"
     param_list = [ConfigurationChecksum()]
 
 class IdleAlgorithmSubPage(SubPage):
+    name = "Idle Algorithm Sub Page"
     param_list = [IdleAlgorithm()]
 
 class TimeZoneSubPage(SubPage):
+    name = "Time Zone Sub Page"
     param_list = [TimeZone()]
 
 class TripResetLockOutSubPage(SubPage):
+    name = "Trip Reset Lockout Sub Page"
     param_list = [TripResetLockOut()]
 
 class TrendConfigurationSubPage(SubPage):
+    name = "Trend Configuration Sub Page"
     param_list = [OilPressureMinRPMLimit(),
                   OilPressureMaxRPMLimit(),
                   OilPressureMinTempLimit(),
@@ -1750,34 +1843,44 @@ class TrendConfigurationSubPage(SubPage):
                   BatteryVoltageMaximumRPMLimit()]
 
 class ServiceAlertPercentageSubPage(SubPage):
+    naem = "Service Alert Percentage Sub Page"
     param_list = [ServiceAlertPercentage()]
 
 class LastStopIncidentEnableSubPage(SubPage):
+    name = "Last Stop Incident Enable Sub Page"
     param_list = [LastStopIncidentEnable()]
 
 class DriverCardEnableSubPage(SubPage):
+    name = "Driver Card Enable Sub Page"
     param_list = [DriverCardEnable()]
 
 class ButtonFeedbackEnableSubPage(SubPage):
+    name = "Button Feedback Enable Sub Page"
     param_list = [ButtonFeedbackEnable()]
 
 class OverspeedAEnableSubPage(SubPage):
+    name = "Overspeed A Enable Sub Page"
     param_list = [OverspeedAEnable()]
 
 class OverspeedBEnableSubPage(SubPage):
+    name = "Overspeed B Enable Sub Page"
     param_list = [OverspeedBEnable()]
 
 class OverRevEnableSubPage(SubPage):
+    name = "Over Rev Enable Sub Page"
     param_list = [OverRevEnable()]
 
 class CPCSoftwareVersionIDSubPage(SubPage):
+    name = "CPC Software Version ID Sub Page"
     param_list = [CPCSoftwareVersionID()]
 
 class PTOIdleRPMThresholdSubPage(SubPage):
+    name = "PTO Idle RPM Threshold Sub Page"
     param_list = [PTOIdleRPMThreshold(),
                   PTOIdleLoadRPMThreshold()]
 
 class FirmBrakeDecelerationLimitSubPage(SubPage):
+    name = "Firm Brake Deceleration Limit Sub Page"
     param_list = [FirmBrakeDecelerationLimit()]
 
 ###########################
@@ -1785,12 +1888,15 @@ class FirmBrakeDecelerationLimitSubPage(SubPage):
 ###########################
 
 class AlertCodeSubPage(SubPage):
+    name = "Alert Code Sub Page"
     param_list = [AlertCode()]
 
 class AlertTimeStampSubPage(SubPage):
+    name = "Alert Timestamp Sub Page"
     param_list = [AlertTimeStamp()]
 
 class AlertRoadSpeedSubPage(SubPage):
+    name = "Alert Roadspeed Sub Page"
     repeat = 12
     param_list = [AlertRoadSpeed(),
                   AlertEngineRPM(),
@@ -1813,12 +1919,14 @@ class AlertRoadSpeedSubPage(SubPage):
 #############################
 
 class DailySubPage(SubPage):
+    name = "Daily Sub Page"
     param_list = [DailyDistanceTravelled(),
                   DailyFuelConsumption(),
                   StartDayTimeStamp(),
                   StartDayOdometer()]
 
 class BreakdownSubPage(SubPage):
+    name = "Breakdown Sub Page"
     param_list = [IdleTimeBreakdown(),
                   DriveTimeBreakdown()]
 
@@ -1829,54 +1937,66 @@ class BreakdownSubPage(SubPage):
 #############################
 
 class PermanentDataSubPage(SubPage):
+    name = "Permanent Data Sub Page"
     param_list = [PermanentTotalDistance(),
                   PermanentTotalFuel(),
                   PermanentTotalTime()]
 
 class PermanentTotalIdleSubPage(SubPage):
+    name = "Permanent Total Idle Sub Page"
     param_list = [PermanentTotalIdleFuel(),
                   PermanentTotalIdleTime()]
 
 class PermanentTotalVSGSubPage(SubPage):
+    name = "Permanent Total VSG Sub Page"
     param_list = [PermanentTotalVSGFuel(),
                   PermanentTotalVSGTime(),
                   PermanentVSGPTOIdleFuel(),
                   PermanentVSGPTOIdleTime()]
 
 class PermanentTotalCruiseTimeSubPage(SubPage):
+    name = "Permanent Total Cruise Time Sub Page"
     param_list = [PermanentTotalCruiseTime()]
 
 class PermanentOptimizedIdleSubPage(SubPage):
+    name = "Permanent Optimized Idle Sub Page"
     param_list = [PermanentOptimizedIdleActiveTime(),
                   PermanentOptimizedIdleRunTime()]
 
 class PermanentEngineBrakeTimeSubPage(SubPage):
+    name = "Permanent Engine Brake Time Sub Page"
     param_list = [PermanentEngineBrakeTime()]
 
 class PermanentDriveAverageLoadFactorSubPage(SubPage):
+    name = "Permanent Drive Average Load Factor Sub Page"
     param_list = [PermanentDriveAverageLoadFactor()]
 
 class PermanentEngineRevolutionsSubPage(SubPage):
+    name = "Permanent Engine Revolutions Sub Page"
     param_list = [PermanentEngineRevolutions()]
 
 class PermanentFanTimeSubPage(SubPage):
+    name = "Permanent Fan Time Sub Page"
     param_list = [PermanentFanTimeEngine(),
                   PermanentFanTimeManual(),
                   PermanentFanTimeAC(),
                   PermanentFanTimeDPF()]
 
 class PermanentPeakSubPage(SubPage):
+    name = "Permanent Peak Sub Page"
     param_list = [PermanentPeakRoadSpeed(),
                   PermanentPeakEngineRPM(),
                   PermanentPeakRoadSpeedTimeStamp(),
                   PermanentPeakEngineRPMTimeStamp()]
 
 class PermanentOptimizedIdleCountsSubPage(SubPage):
+    name = "Permanent Optimized Idle Counts Sub Page"
     param_list = [PermanentTotalBatteryStartsNormal(),
                   PermanentTotalBatteryStartsAlternative(),
                   PermanentTotalBatteryStartsContinuous()]
 
 class PermanentDPFRegenStatisticsSubPage(SubPage):
+    name = "Permanent DPF Regen Statistics Sub Page"
     param_list = [PermanentParkedDPFRegenAttempts(),
                   PermanentDrivingDPFRegenAttempts(),
                   PermanentParkedDPFRegenComplete(),
@@ -1888,6 +2008,7 @@ class PermanentDPFRegenStatisticsSubPage(SubPage):
                   PermanentParkedTime()]
 
 class PermanentTotalPredictiveCruiseTimeSubPage(SubPage):
+    name = "Permanent Total Predictive Cruise Time Sub Page"
     param_list = [PermanentTotalPredictiveCruiseTime()]
 
 
@@ -1897,33 +2018,43 @@ class PermanentTotalPredictiveCruiseTimeSubPage(SubPage):
 ############################
 
 class HeaderEngineHoursSubPage(SubPage):
+    name = 'Engine Hours Sub Page'
     param_list = [HeaderEngineHours()]
 
 class HeaderDriverIDSubPage(SubPage):
+    name = "Driver ID Sub Page"
     param_list = [HeaderDriverID()]
 
 class HeaderVehicleIDSubPage(SubPage):
+    name = "Vehicle ID Sub Page"
     param_list = [HeaderVehicleID()]
 
 class HeaderExtractionOdometerSubPage(SubPage):
+    name = "Extraction Odometer Sub Page"
     param_list = [HeaderExtractionOdometer()]
 
 class HeaderExtractionTimeStampSubPage(SubPage):
+    name = "Extraction Timestamp Sub Page"
     param_list = [HeaderExtractionTimeStamp()]
 
 class HeaderConfigurationChecksumSubPage(SubPage):
+    name = "Configuration Checksum Sub Page"
     param_list = [HeaderConfigurationChecksum()]
 
 class HeaderEngineSerialNumberSubPage(SubPage):
+    name = "Engine Serial Number Sub Page"
     param_list = [HeaderEngineSerialNumber()]
 
 class HeaderStatusInformationSubPage(SubPage):
+    name = "Status Information Sub Page"
     param_list = [HeaderStatusInformation()]
 
 class HeaderMBESerialNumberSubPage(SubPage):
+    name = "Engine Serial Number Sub Page"
     param_list = [HeaderMBESerialNumber()]
 
 class HeaderSoftwareVersionSubPage(SubPage):
+    name = "Software Version Sub Page"
     param_list = [HeaderSoftwareMajorVersion(),
                   HeaderSoftwareMinorVersion()]
 
